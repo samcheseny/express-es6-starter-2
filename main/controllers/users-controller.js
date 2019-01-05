@@ -4,8 +4,14 @@ const utils = require('../utils');
 
 class UsersController {
 
+    getOne(request, response) {
+        return new User().findOne(request.params.id)
+            .then(user => response.status(200).json(user))
+            .catch(error => response.status(400).send(error));
+    }
+
     getAll(request, response) {
-        return User.findAll()
+        return new User().findAll()
             .then(users => response.status(200).json(users))
             .catch(error => response.status(400).send(error));
     }
@@ -24,15 +30,17 @@ class UsersController {
                     return response.status(400).send(error);
                 }
 
-                let user = new User({
+                let user = new User();
+
+                let data = {
                     id: utils.generateUUID(),
                     clientID: request.body.clientID,
                     name: request.body.name,
                     email: request.body.email,
                     password: hash,
-                });
+                };
 
-                return user.save()
+                return user.save(data)
                     .then(user => response.status(201).json(user))
                     .catch(error => response.status(400).send(error));
 
@@ -48,28 +56,28 @@ class UsersController {
         //todo: return model info to client alongside token on login
         let authUser = request.body.model;
 
-        return User.findOne({where: {email: authUser.email, id: authUser.id}})
+        return new User().findByCriteria({email: authUser.email, id: authUser.id})
             .then(user => {
 
                 if (!user) {
                     return response.status(404).json(user);
                 }
 
-                AccessToken.update(
-                    {revoked: true},
-                    {returning: true, plain: true, where: {userID: authUser.id, revoked: false}}
-                )
+                new AccessToken().update({revoked: true}, {userID: authUser.id, revoked: false})
                     .then(token => {
 
                         //todo: add response to send
-                        if (!token[1].dataValues) {
-                            return response.status(404).send(null);
+                        if (!token) {
+
+                            let data = {
+                                message: "Token not found"
+                            };
+
+                            return response.status(404).send(data);
+
                         }
 
-                        RefreshToken.update(
-                            {revoked: true},
-                            {where: {userID: authUser.id, revoked: false}}
-                        )
+                        new RefreshToken().update({revoked: true}, {userID: authUser.id, revoked: false})
                             .then(refreshToken => console.log(refreshToken))
                             .catch(error => console.log(error));
 

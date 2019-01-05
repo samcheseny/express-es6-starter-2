@@ -6,7 +6,7 @@ describe('Testing UsersController', () => {
 
     });
 
-    describe('getAll', () => {
+    describe('findAll', () => {
 
         it('should return all active users', () => {
 

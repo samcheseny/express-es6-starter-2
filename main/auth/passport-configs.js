@@ -7,7 +7,7 @@ const crypto = require('crypto');
 passport.use("clientPassword", new ClientPasswordStrategy(
     (client_id, client_secret, done) => {
 
-        Client.findByPk(client_id)
+        new Client().findOne(client_id)
             .then(client => {
 
                 if (!client || !client.active) {
@@ -30,14 +30,14 @@ passport.use("bearer", new BearerStrategy(
 
         let tokenHash = crypto.createHash('sha1').update(token).digest('hex');
 
-        AccessToken.findOne({where: {token: tokenHash, revoked: false}})
+        new AccessToken().findByCriteria({token: tokenHash, revoked: false})
             .then(accessToken => {
 
                 if (!accessToken || new Date() > accessToken.expirationDate) {
                     return done(null, false);
                 }
 
-                User.findByPk(accessToken.userID)
+                new User().findOne(accessToken.userID)
                     .then(user => {
 
                         if (!user) {
