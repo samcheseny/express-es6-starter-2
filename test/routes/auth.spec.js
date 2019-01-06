@@ -25,7 +25,7 @@ describe('Testing Auth Routes', () => {
 
     });
 
-    it('should add a new model', () => {
+    it('should add a new model', (done) => {
 
         chai.request(server)
             .post('/api/register')
@@ -44,7 +44,7 @@ describe('Testing Auth Routes', () => {
 
     });
 
-    it('should logout an auth model', () => {
+    it('should logout an auth model', (done) => {
 
         chai.request(server)
             .post('/api/users')

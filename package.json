@@ -6,7 +6,8 @@
   "scripts": {
     "start:dev": "nodemon ./bin/www",
     "start": "node ./bin/www",
-    "test": "nyc --reporter=text mocha './test/**/*.spec.js'"
+    "test": "mocha ./test/**/*.spec.js",
+    "test:coverage": "nyc --reporter=text mocha ./test/**/*.spec.js"
   },
   "author": "",
   "license": "ISC",
@@ -31,7 +32,7 @@
     "chai-as-promised": "^7.1.1",
     "chai-http": "^4.2.0",
     "mocha": "^5.2.0",
-    "nodemon": "^1.18.4",
+    "nodemon": "^1.18.7",
     "nyc": "^13.1.0"
   }
 }
