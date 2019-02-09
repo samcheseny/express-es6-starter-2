@@ -1,6 +1,9 @@
 const {User, AccessToken, RefreshToken} = require('../models');
 const bcrypt = require('bcryptjs');
 const utils = require('../utils');
+const {performance} = require('perf_hooks');
+const {debuglog} = require('util');
+const debug = debuglog('performance');
 
 class UsersController {
 
@@ -18,13 +21,21 @@ class UsersController {
 
     register(request, response) {
 
+        performance.mark('Begin registration');
+
         bcrypt.genSalt(10, (error, salt) => {
+
+            performance.mark('Finish salt generation');
 
             if (error) {
                 return response.status(400).send(error);
             }
 
+            performance.mark('Start hashing');
+
             bcrypt.hash(request.body.password, salt, (error, hash) => {
+
+                performance.mark('Finish hashing');
 
                 if (error) {
                     return response.status(400).send(error);
@@ -39,6 +50,15 @@ class UsersController {
                     email: request.body.email,
                     password: hash,
                 };
+
+                performance.mark('Finish registration');
+
+                performance.measure('Registration', 'Begin registration', 'Finish registration');
+                performance.measure('Salt generation', 'Begin registration', 'Finish salt generation');
+                performance.measure('Hashing', 'Start hashing', 'Finish hashing');
+
+                performance.getEntriesByType('measure')
+                    .forEach((measurement) => debug('\x1b[33m%s\x1b[0m', `${measurement.name} : ${measurement.duration}`));
 
                 return user.save(data)
                     .then(user => response.status(201).json(user))

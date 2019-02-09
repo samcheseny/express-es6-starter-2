@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start:dev": "nodemon ./bin/www",
+    "start:perf": "NODE_DEBUG=performance node ./bin/www",
     "start": "node ./bin/www",
     "test": "mocha ./test/**/*.spec.js",
     "test:coverage": "nyc --reporter=text mocha ./test/**/*.spec.js"
