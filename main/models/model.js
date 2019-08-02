@@ -1,30 +1,17 @@
 const {Pool} = require('pg');
+const Utilities = require('../utils')
 
 class Model {
 
     constructor() {
 
-        this.pool = new Pool({
-            user: process.env.DB_USERNAME,
-            host: process.env.DB_HOST,
-            database: process.env.DB_DATABASE,
-            password: process.env.DB_PASSWORD,
-            port: process.env.DB_PORT,
-        });
-
-        this.table = "";
-
-        this.primaryKey = "";
-
-        this.model = null;
-
     }
 
-    query(queryString, parameters = []) {
+    static query(queryString, parameters = []) {
         return this.pool.query(queryString, parameters);
     }
 
-    async findAll() {
+    async static findAll() {
 
         try {
 
@@ -32,7 +19,9 @@ class Model {
 
             let data = [];
 
-            rows.forEach(row => data.push(Object.assign(this.model, row)));
+            rows.forEach(row => data.push(
+                Utilities.sanitizeObject(this.model, {...this.model, ...row}))
+            );
 
             return data;
 
@@ -42,7 +31,7 @@ class Model {
 
     }
 
-    async findOne(id) {
+    async static findOne(id) {
 
         if (id === null || id === undefined) {
             throw Error("ID cannot be empty");
@@ -55,7 +44,10 @@ class Model {
                 [id]
             );
 
-            return Object.assign(this.model, rows[0]);
+            return Utilities.sanitizeObject(
+                this.model,
+                {...this.model, ...rows[0]}
+            );
 
         } catch (error) {
             throw Error(error);
@@ -63,13 +55,13 @@ class Model {
 
     }
 
-    async save(data) {
+    async static save(data) {
 
         if (typeof data !== 'object') {
             throw TypeError("Data must be an object");
         }
-
-        if (data === {}) {
+    
+        if (Utilities.isEmpty(data)) {
             throw Error("Data cannot be empty");
         }
 
@@ -90,7 +82,10 @@ class Model {
 
             let {rows} = await this.query(query, parameters);
 
-            return Object.assign(this.model, rows[0]);
+            return Utilities.sanitizeObject(
+                this.model,
+                {...this.model, ...rows[0]}
+            );
 
         } catch (error) {
             throw Error(error);
@@ -98,13 +93,13 @@ class Model {
 
     }
 
-    async update(data, criteria) {
+    async static update(data, criteria) {
 
         if (typeof data !== 'object') {
             throw TypeError("Data must be an object");
         }
 
-        if (data === {}) {
+        if (Utilities.isEmpty(data)) {
             throw Error("Data cannot be empty");
         }
 
@@ -118,14 +113,17 @@ class Model {
 
             let {rows} = await this.query(query);
 
-            return Object.assign(this.model, rows[0]);
+            return Utilities.sanitizeObject(
+                this.model,
+                {...this.model, ...rows[0]}
+            );
 
         } catch (error) {
             throw Error(error);
         }
     }
 
-    async findByCriteria(criteria) {
+    async static findByCriteria(criteria) {
 
         try {
 
@@ -145,12 +143,29 @@ class Model {
 
             console.log( `SELECT * FROM ${this.table} WHERE ${columns.join(" AND ")}`);
 
-            return Object.assign(this.model, rows[0]);
+            return Utilities.sanitizeObject(
+                this.model,
+                {...this.model, ...rows[0]}
+            );
 
         } catch (error) {
             throw Error(error);
         }
     }
 }
+
+Model.pool = new Pool({
+    user: process.env.DB_USERNAME,
+    host: process.env.DB_HOST,
+    database: process.env.DB_DATABASE,
+    password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT,
+});
+
+Model.table = "";
+
+Model.primaryKey = "";
+
+Model.model = null;
 
 module.exports.Model = Model;

@@ -2,7 +2,7 @@ const oauth2orize = require('oauth2orize');
 const {AccessToken, RefreshToken, User} = require('../models');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const utils = require('../utils');
+const Utilities = require('../utils');
 const passport = require('passport');
 
 const server = oauth2orize.createServer();
@@ -10,7 +10,7 @@ const server = oauth2orize.createServer();
 // Resource Owner Password
 server.exchange(oauth2orize.exchange.password((client, username, password, scope, done) => {
 
-    new User().findByCriteria({email: username})
+    User.findByCriteria({email: username})
         .then(user => {
 
             if (!user) {
@@ -24,14 +24,14 @@ server.exchange(oauth2orize.exchange.password((client, username, password, scope
                         return done(null, false);
                     }
 
-                    let token = utils.getUniqueID(256);
-                    let refreshToken = utils.getUniqueID(256);
+                    let token = Utilities.getUniqueID(256);
+                    let refreshToken = Utilities.getUniqueID(256);
                     let tokenHash = crypto.createHash('sha1').update(token).digest('hex');
                     let refreshTokenHash = crypto.createHash('sha1').update(refreshToken).digest('hex');
                     let expirationDate = new Date(new Date().getTime() + (3600 * 1000));
 
                     let data = {
-                        id: utils.generateUUID(),
+                        id: Utilities.generateUUID(),
                         token: tokenHash,
                         expirationDate: expirationDate,
                         clientID: client.id,
@@ -39,21 +39,17 @@ server.exchange(oauth2orize.exchange.password((client, username, password, scope
                         scope: scope
                     };
 
-                    let newAccessToken = new AccessToken();
-
-                    newAccessToken.save(data)
+                    AccessToken.save(data)
                         .then(createdAccessToken => {
 
-                            let newRefreshToken = new RefreshToken();
-
                             data = {
-                                id: utils.generateUUID(),
+                                id: Utilities.generateUUID(),
                                 refreshToken: refreshTokenHash,
                                 clientID: client.id,
                                 userID: user.id
                             };
 
-                            newRefreshToken.save(data)
+                            RefreshToken.save(data)
                                 .then(createdRefreshToken =>
                                     done(null, token, refreshToken, {expires_in: expirationDate})
                                 )
@@ -73,18 +69,18 @@ server.exchange(oauth2orize.exchange.refreshToken((client, refreshToken, scope, 
 
     let refreshTokenHash = crypto.createHash('sha1').update(refreshToken).digest('hex');
 
-    new RefreshToken().findByCriteria({refreshToken: refreshTokenHash, revoked: false})
+    RefreshToken.findByCriteria({refreshToken: refreshTokenHash, revoked: false})
         .then(token => {
 
             if (!token) {
                 return done(null, false);
             }
 
-            let newAccessToken = utils.getUniqueID(256);
+            let newAccessToken = Utilities.getUniqueID(256);
             let accessTokenHash = crypto.createHash('sha1').update(newAccessToken).digest('hex');
             let expirationDate = new Date(new Date().getTime() + (3600 * 1000));
 
-            new AccessToken().update(
+            AccessToken.update(
                 {token: accessTokenHash, scope: scope, expirationDate: expirationDate},
                 {userID: token.userID}
             )

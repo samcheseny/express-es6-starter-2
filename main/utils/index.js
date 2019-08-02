@@ -18,3 +18,19 @@ exports.generateUUID = () => uuid();
 function getRandomInteger(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
+exports.sanitizeObject = (oldObject, newObject) =>{
+    
+    let oldObjectProperties = Object.getOwnPropertyNames(oldObject);
+
+    Object.keys(newObject).forEach(key=>{
+        if(!(key in oldObjectProperties)){
+            delete newObject[key]
+        }
+    })
+
+    return newObject;
+
+}
+
+exports.isEmpty = (object)=> Object.keys(object).length < 1

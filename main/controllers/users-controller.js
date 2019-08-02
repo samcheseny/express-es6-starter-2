@@ -1,6 +1,6 @@
 const {User, AccessToken, RefreshToken} = require('../models');
 const bcrypt = require('bcryptjs');
-const utils = require('../utils');
+const Utilities = require('../utils');
 const {performance} = require('perf_hooks');
 const {debuglog} = require('util');
 const debug = debuglog('performance');
@@ -8,13 +8,13 @@ const debug = debuglog('performance');
 class UsersController {
 
     getOne(request, response) {
-        return new User().findOne(request.params.id)
+        return User.findOne(request.params.id)
             .then(user => response.status(200).json(user))
             .catch(error => response.status(400).send(error));
     }
 
     getAll(request, response) {
-        return new User().findAll()
+        return User.findAll()
             .then(users => response.status(200).json(users))
             .catch(error => response.status(400).send(error));
     }
@@ -41,10 +41,8 @@ class UsersController {
                     return response.status(400).send(error);
                 }
 
-                let user = new User();
-
                 let data = {
-                    id: utils.generateUUID(),
+                    id: Utilities.generateUUID(),
                     clientID: request.body.clientID,
                     name: request.body.name,
                     email: request.body.email,
@@ -60,7 +58,7 @@ class UsersController {
                 performance.getEntriesByType('measure')
                     .forEach((measurement) => debug('\x1b[33m%s\x1b[0m', `${measurement.name} : ${measurement.duration}`));
 
-                return user.save(data)
+                return User.save(data)
                     .then(user => response.status(201).json(user))
                     .catch(error => response.status(400).send(error));
 
@@ -76,14 +74,14 @@ class UsersController {
         //todo: return model info to client alongside token on login
         let authUser = request.body.model;
 
-        return new User().findByCriteria({email: authUser.email, id: authUser.id})
+        return User.findByCriteria({email: authUser.email, id: authUser.id})
             .then(user => {
 
                 if (!user) {
                     return response.status(404).json(user);
                 }
 
-                new AccessToken().update({revoked: true}, {userID: authUser.id, revoked: false})
+                AccessToken.update({revoked: true}, {userID: authUser.id, revoked: false})
                     .then(token => {
 
                         //todo: add response to send
@@ -97,7 +95,7 @@ class UsersController {
 
                         }
 
-                        new RefreshToken().update({revoked: true}, {userID: authUser.id, revoked: false})
+                        RefreshToken.update({revoked: true}, {userID: authUser.id, revoked: false})
                             .then(refreshToken => console.log(refreshToken))
                             .catch(error => console.log(error));
 
